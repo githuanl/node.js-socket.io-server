@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style type="text/css">
+		.caozuo{
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			height: 100px;
+			background-color: #ccc;
+			width: 100%;
+		}
+		.caozuo input{
+			font-size: 30px;
+		}
+		.caozuo input[type=text]{
+			width: 100%;
+		}
+	</style>
+</head>
+<body>
+	<h1>小小聊天室 欢迎：<span id="yonghu"><%=yonghuming%></span></h1>
+	<div>
+		<ul class="liebiao">
+			
+		</ul>
+	</div>
+
+	<div class="caozuo">
+		<input type="text" id="neirong" />
+	</div>
+
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="/jquery-1.11.3.min.js"></script>
+	<script type="text/javascript">
+		var socket = io();
+		$("#neirong").keydown(function(e){
+			if(e.keyCode == 13){
+				//把文本框的内容上传：
+				socket.emit("liaotian",{
+					"neirong" : $("#neirong").val(),
+					"ren" : $("#yonghu").html()
+				});
+				$(this).val("");
+			}
+		});
+    socket.on("siliao",function(msg){
+			$(".liebiao").prepend("<li><b>" + msg.ren + "：</b>"+ msg.neirong + "</li>");
+		});
+		socket.on("liaotian",function(msg){
+			$(".liebiao").prepend("<li><b>" + msg.ren + "：</b>"+ msg.neirong + "</li>");
+		});
+	</script>
+</body>
+</html>

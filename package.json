@@ -1,0 +1,13 @@
+{
+  "name": "mchat",
+  "version": "0.0.1",
+  "dependencies": {
+    "compression": "*",
+    "cookie-parser": "*",
+    "ejs": "*",
+    "express": "*",
+    "express-session": "*",
+    "mongoose": "*",
+    "socket.io": "*"
+  }
+}
