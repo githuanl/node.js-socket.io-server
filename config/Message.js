@@ -15,9 +15,10 @@ var Message = db.model('Message', {
 });
 
 var save = function (message) {
-    MyLog('保存');
+
     var msg_id = vf_utils.generateUUID();
     var timestamp = new Date().getTime();
+    var bodies = JSON.stringify(message.bodies);
     var msg = new Message({
         msg_id: msg_id,
         timestamp: timestamp,
@@ -26,12 +27,17 @@ var save = function (message) {
         chat_type: message.chat_type,
         groupId: message.groupId,
         ext: message.ext,
-        bodies: message.bodies,
+        bodies: bodies,
     });
-    MyLog('打印');
+
     MyLog(msg);
     //保存
     msg.save(function (err) {
+        if (err) {
+            MyLog(err);
+        }else{
+            MyLog("保存聊天记录成功");
+        }
     });
 }
 

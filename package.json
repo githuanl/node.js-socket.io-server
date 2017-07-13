@@ -5,7 +5,9 @@
     "compression": "*",
     "cookie-parser": "*",
     "ejs": "*",
+    "formidable":"*",
     "express": "*",
+    "body-parser":"*",
     "express-session": "*",
     "mongoose": "*",
     "socket.io": "*"

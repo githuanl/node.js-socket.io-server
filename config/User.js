@@ -9,7 +9,7 @@ var User = db.model('User', {
 });
 
 // 保存
-var save = function (userName, password,callBack) {
+var save = function (userName, password, callBack) {
     //生成token
     var mtoken = vf_utils.generateUUID();
 
@@ -20,7 +20,9 @@ var save = function (userName, password,callBack) {
     //保存
     userN.save(function (err) {
         if (!err) {
-            callBack(mtoken,auth_date);
+            if (callBack) {
+                callBack(mtoken, auth_date);
+            }
             console.log("注册 -- 保存成功!");
         } else {
             console.log("注册 -- 保存失败!");
@@ -54,9 +56,9 @@ var register = function (res, req) {
     User.find({"name": userName}, function (err, result) {
         var user = result[0]; //user这个变量是一个User的实例。
         if (!user) {		//如果不存在 则注册
-            var mtoken ='';
+            var mtoken = '';
             var auth_date = '';
-            save(userName,password,function (token,date) {
+            save(userName, password, function (token, date) {
                 mtoken = token;
                 auth_date = date;
             });
@@ -80,7 +82,7 @@ var register = function (res, req) {
 }
 
 
-var mobileLogin = function (res, req, token_Map) {
+var mobileLogin = function (res, req, token_Map, callBack) {
     console.log('login');
     var userName = req.query.userName;
     console.log(userName);
@@ -110,6 +112,9 @@ var mobileLogin = function (res, req, token_Map) {
         // user.save();
         if (user) {
             token_Map[user.auth_token] = userName;
+            if (callBack) {
+                callBack(userName);
+            }
             res.json({
                 code: 0,
                 message: "登录成功",
