@@ -2,13 +2,14 @@
   "name": "mchat",
   "version": "0.0.1",
   "dependencies": {
+    "apn": "^2.1.5",
+    "body-parser": "*",
     "compression": "*",
     "cookie-parser": "*",
     "ejs": "*",
-    "formidable":"*",
     "express": "*",
-    "body-parser":"*",
     "express-session": "*",
+    "formidable": "*",
     "mongoose": "*",
     "socket.io": "*"
   }

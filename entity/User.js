@@ -1,22 +1,28 @@
-var db = require('./mongoose.js');
+var db = require('../config/mongoose.js');
 var vf_utils = require('../utils/utils.js');
 
 var User = db.model('User', {
+    userId: Number,
     name: String,
+    headImageUrl: String,   //头像
+    nickname: String,       //昵称
     password: String,
     auth_token: String,
     auth_date: Number
 });
 
 // 保存
-var save = function (userName, password, callBack) {
+var save = function (userName, password, headImageUrl, callBack) {
     //生成token
     var mtoken = vf_utils.generateUUID();
 
-    //生成token
+    //生成token 对应的失效日期
     var auth_date = vf_utils.dateAdd("m", 2, new Date()).getTime();
     //实例化，实例化的时候，new User
-    var userN = new User({name: userName, password: password, auth_token: mtoken, auth_date: auth_date});
+    var userN = new User({
+        name: userName, password: password, headImageUrl: headImageUrl,
+        auth_token: mtoken, auth_date: auth_date
+    });
     //保存
     userN.save(function (err) {
         if (!err) {
@@ -32,7 +38,7 @@ var save = function (userName, password, callBack) {
 
 // 注册
 var register = function (res, req) {
-    var userName = req.query.userName;
+    var userName = req.body.userName;
     if (!userName) {
         res.json({
             code: -1,
@@ -42,7 +48,7 @@ var register = function (res, req) {
         return;
     }
 
-    var password = req.query.password;
+    var password = req.body.password;
     if (!password) {
         res.json({
             code: -1,
@@ -51,19 +57,19 @@ var register = function (res, req) {
         });
         return;
     }
-
+    var headImageUrl = req.body.headImageUrl;
     //查询是否已经注册
     User.find({"name": userName}, function (err, result) {
         var user = result[0]; //user这个变量是一个User的实例。
         if (!user) {		//如果不存在 则注册
             var mtoken = '';
             var auth_date = '';
-            save(userName, password, function (token, date) {
+            save(userName, password,headImageUrl, function (token, date) {
                 mtoken = token;
                 auth_date = date;
             });
             res.json({
-                code: 0,
+                code: 1,
                 message: "注册成功",
                 data: {
                     auth_token: mtoken,
@@ -77,15 +83,14 @@ var register = function (res, req) {
                 data: ""
             });
         }
-        console.log(user);
+        // console.log(user);
     });
 }
 
 
 var mobileLogin = function (res, req, token_Map, callBack) {
-    console.log('login');
-    var userName = req.query.userName;
-    console.log(userName);
+    var userName = req.body.userName;
+    console.log('登录人：' + userName);
     if (!userName) {
         res.json({
             code: -1,
@@ -94,8 +99,7 @@ var mobileLogin = function (res, req, token_Map, callBack) {
         });
         return;
     }
-
-    var password = req.query.password;
+    var password = req.body.password;
     if (!password) {
         res.json({
             code: -1,
@@ -116,7 +120,7 @@ var mobileLogin = function (res, req, token_Map, callBack) {
                 callBack(userName);
             }
             res.json({
-                code: 0,
+                code: 1,
                 message: "登录成功",
                 data: {
                     auth_token: user.auth_token,
@@ -130,7 +134,7 @@ var mobileLogin = function (res, req, token_Map, callBack) {
                 data: ""
             });
         }
-        console.log(user);
+        // console.log(user);
     });
 }
 
@@ -139,10 +143,25 @@ var findUserWithName = function (res, req) {
 
 }
 
+//根据用户名查询 user
+var findAllUser = function (res, req, onLineUsers) {
+    //查询数据
+    User.find({}, ['name','headImageUrl','nickname'], function (err, result) {
+        res.json({
+            code: 1,
+            message: "查询数据成功",
+            data: { "allUser" : result,
+                    "onLineUsers" : onLineUsers
+                }
+        })
+    });
+}
+
 module.exports = {
     User,
     mobileLogin,
     save,
     findUserWithName,
     register,
+    findAllUser,
 };

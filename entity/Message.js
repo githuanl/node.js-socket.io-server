@@ -1,6 +1,6 @@
-var db = require('./mongoose.js');
+var db = require('../config/mongoose.js');
 var vf_utils = require('../utils/utils.js');
-var MyLog = require('./MyLog.js');
+var MyLog = require('../utils/MyLog.js');
 var Message = db.model('Message', {
     msg_id: String,            //消息id uuid
     timestamp: Number,        //发送(服务器)时间
@@ -29,16 +29,13 @@ var save = function (message) {
         ext: message.ext,
         bodies: bodies,
     });
-
-    MyLog(msg);
     //保存
     msg.save(function (err) {
         if (err) {
-            MyLog(err);
-        }else{
-            MyLog("保存聊天记录成功");
+            MyLog("保存聊天记录失败");
         }
     });
+    return msg;
 }
 
 module.exports = {
