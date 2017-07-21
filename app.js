@@ -5,27 +5,12 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
-//socket.io公式：
-var http = require('http').Server(app);
-var io = require('socket.io')(http, {
-    // below are engine.IO options
-    pingInterval: 10000,
-    pingTimeout: 5000,
-    cookie: false
-});
-var vf_utils = require('./utils/utils.js');
-
-var formidable = require('formidable');
-var fs = require('fs');
-var path = require("path");
-
-var MyLog = require('./utils/MyLog.js');
-var db = require('./config/mongoose.js');
-var vfMessage = require('./entity/Message.js');
-var vfUser = require('./entity/User.js');
-
 //session公式：
 var session = require('express-session');
+//模板引擎
+app.set("view engine", "ejs");
+//静态服务
+app.use(express.static("./public"));
 app.use(session({
     secret: 'keyboard cat',
     resave: true,   // 即使 session 没有被修改，也保存 session 值，默认为 true
@@ -34,16 +19,33 @@ app.use(session({
     rolling: true   //add 刷新页面 session 过期时间重置
 }));
 
+//socket.io公式：
+var http = require('http').Server(app);
+var io = require('socket.io')(http, {
+    // below are engine.IO options
+    pingInterval: 6000,
+    pingTimeout: 3000,
+    cookie: false,
+    reconnection: true
+});
+// 工具类
+var vf_utils = require('./utils/utils.js');
+//文件上传
+var formidable = require('formidable');
+var fs = require('fs');
+var path = require("path");
+//日志
+var MyLog = require('./utils/MyLog.js');
+//连接数据库
+var db = require('./config/mongoose.js');
+var vfMessage = require('./entity/Message.js');
+var vfUser = require('./entity/User.js');
 
-//模板引擎
-app.set("view engine", "ejs");
-//静态服务
-app.use(express.static("./public"));
 
 //ios 推送消息
 var apn = require('apn');
 // token 数组
-let tokens = ["611273f6b33fc5c89e95c1bf13fcec9b996651b201a41213ec81623ccc246d80"];
+let tokens = ["431b9699945a0fa11e692f9a281e3be5deec70ea61c8530aef7efbcc098b7e71"];
 
 let service = new apn.Provider({
     token: {
@@ -63,17 +65,16 @@ note.sound = "ping.aiff";
 note.alert = "消息推送啊";
 note.payload = {'messageFrom': 'John Appleseed', 'test': 'test'};
 
-// service.send(note, tokens).then(result => {
-//     MyLog("sent:", result.sent.length);
-//     MyLog("failed:", result.failed.length);
-// });
-// service.shutdown();
+service.send(note, tokens).then(result => {
+    MyLog("sent:", result.sent.length);
+    MyLog("failed:", result.failed.length);
+});
+service.shutdown();
 
+// 在线用户
 var alluser = [];
-
 //所有的 token : user
 var token_Map = {};
-
 //保存所有的 user ：socket 连接
 var socket_Map = {};
 
@@ -86,7 +87,6 @@ app.get("/", function (req, res, next) {
 app.post("/register", function (req, res, next) {
     vfUser.register(res, req);
 });
-
 
 //上传文件
 app.post('/uploadFiles', function (req, res, next) {
@@ -193,76 +193,7 @@ app.get("/chat", function (req, res, next) {
     });
 });
 
-
-io.on("connection", function (socket) {
-
-    var token = socket.handshake.query.auth_token;
-    var usrName = token_Map[token];
-    // MyLog(socket_Map);
-    // if (alluser.indexOf(usrName) == -1) {
-    //     alluser.push(usrName);
-    //     io.emit("onLine", {'user': usrName});
-    // }
-    socket_Map[usrName] = socket;  //将用户对应的 socket 存起来
-    // MyLog(socket.handshake.headers);
-    // 整个系统 级的聊天
-    socket.on("liaotian", function (msg) {
-        MyLog(msg);
-        //把接收到的msg原样广播
-        socket.broadcast.emit("liaotian", msg);
-    });
-
-    // 单聊
-    socket.on("chat", function (msg) {
-        
-        var to = msg.to + '';   //给谁发消息
-        
-        MyLog(msg);
-        
-        var nMessage = vfMessage.save(msg);   //将数据保存到数据库
-
-        // io.emit('chat', msg);              // 所有人收的到
-        if (socket_Map.hasOwnProperty(to)) {    //私聊
-            MyLog('私聊发消息');
-            var voIo = socket_Map[to];         //取出对应的io
-            voIo.emit('chat', nMessage);           //用其自身连接给自己发消息
-        } else {
-            MyLog("对方已经下线了");
-            // // 如果 对方下线，苹果端则可以发送推送消息
-            // let n = new apn.Notification();
-            // // 主题 一般取应用标识符（bundle identifier）
-            // n.topic = "cn.centersoft.vifu";
-            // n.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
-            // n.badge = 1;
-            // n.sound = "ping.aiff";
-            // n.alert = JSON.parse(nMessage.bodies).msg;
-            // n.payload = {'messageFrom': 'John Appleseed'};
-            // service.send(n, tokens).then(result => {
-            //     MyLog("sent:", result.sent.length);
-            //     MyLog("failed:", result.failed.length);
-            // });
-        }
-    });
-
-    // 用户下线
-    socket.on('disconnect', function () {
-        var usrName = token_Map[token];
-        // MyLog(alluser);
-        MyLog(usrName + '下线了 下线时间：' + vf_utils.dateAdd("m", 2, new Date()));
-
-        alluser.findIndex(function (T, number, arr) {
-            if (T == usrName) {
-                alluser.splice(number, 1);
-                io.emit("offLine", {'user': usrName});
-                return;
-            }
-        });
-    });
-});
-
-//监听
-http.listen(3000);
-
+// 拦截操作 通过 token 
 io.set("authorization", function (handshakeData, callback) {
 
     // MyLog(handshakeData.url);
@@ -270,14 +201,14 @@ io.set("authorization", function (handshakeData, callback) {
     // MyLog(handshakeData._query);
     var token = handshakeData._query.auth_token;
 
-    // MyLog(token);
+    MyLog(token);
     // MyLog(token_Map);
     if (isLogin > 0 || (token && token_Map.hasOwnProperty(token))) {    //说明存在
         callback(null, true);
-        // MyLog('放行连接');
+        MyLog('放行连接');
     } else {
         if (!token) {                 //不存在token 拦截
-            callback({data: '连接失败'}, false);
+            callback({data: '不存在token时不能连接'}, false);
             MyLog('拦截连接了');
         } else {
             //查询是否存在
@@ -294,18 +225,90 @@ io.set("authorization", function (handshakeData, callback) {
             });
         }
     }
+
     // MyLog(handshakeData.rawHeaders);
     // MyLog(handshakeData.socket._peername);
     // MyLog(handshakeData.client._peername);
 
-    // MyLog(new Date().toLocaleString());
-    // MyLog();
-
-    // if(isLogin<0){
-    // 	callback(null, false);
-    // }else{
-    // callback(null, true);
-    // }
 });
+
+
+io.on('connection', function (socket) {
+
+    var token = socket.handshake.query.auth_token;
+    var usrName = token_Map[token];
+
+    MyLog(usrName +' 上线了 上线时间：' + new Date().toLocaleString());
+    // MyLog(socket_Map);
+    // if (alluser.indexOf(usrName) == -1) {
+    //     alluser.push(usrName);
+    //     io.emit("onLine", {'user': usrName});
+    // }
+    
+    io.emit('onLine', {'user': usrName});
+
+    socket_Map[usrName] = socket;  //将用户对应的 socket 存起来
+    // MyLog(socket.handshake.headers);
+    // 整个系统 级的聊天
+    socket.on('liaotian', function (msg) {
+        //把接收到的msg原样广播
+        socket.broadcast.emit("liaotian", msg);
+    });
+
+
+    // 单聊
+    socket.on('chat', function (message,callback) {
+        
+        vfMessage.save(message,function(msg){ //将数据保存到数据库
+            
+            if(callback){
+                callback(msg);
+            }
+
+            MyLog(msg);
+            // io.emit('chat', msg);              // 所有人收的到
+
+            if (socket_Map.hasOwnProperty(msg.to_user+"")) {    //私聊
+                MyLog("私聊");
+                var voIo = socket_Map[msg.to_user+""];         //取出对应的io
+                voIo.volatile.emit('chat',msg,function(data){   //用其自身连接给自己发消息
+                    MyLog('消息已经送达'+ data);
+                });    
+
+            } else {
+                MyLog("对方已经下线了");
+                note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+                note.badge = 1;
+                note.sound = "ping.aiff";
+                note.alert = JSON.parse(msg.bodies).msg;
+                note.payload = {'messageFrom': 'John Appleseed'};
+                service.send(note, tokens).then(result => {
+                    MyLog("sent:", result.sent.length);
+                    MyLog("failed:", result.failed.length);
+                });
+            }
+
+        });  
+       
+    });
+
+    // 用户下线
+    socket.on('disconnect', function () {
+        var usrName = token_Map[token];
+        // MyLog(alluser);
+        MyLog(usrName + '下线了 下线时间：' + new Date().toLocaleString());
+
+        alluser.findIndex(function (T, number, arr) {
+            if (T == usrName) {
+                alluser.splice(number, 1);
+                io.emit("offLine", {'user': usrName});
+                return;
+            }
+        });
+    });
+});
+
+//监听
+http.listen(3000);
 
 

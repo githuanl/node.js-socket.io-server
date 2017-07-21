@@ -4,17 +4,18 @@ var MyLog = require('../utils/MyLog.js');
 var Message = db.model('Message', {
     msg_id: String,            //消息id uuid
     timestamp: Number,        //发送(服务器)时间
-    from: String,            //发送人
-    to: String,             //要发送的人
+    from_user: String,            //发送人
+    to_user: String,             //要发送的人
     chat_type: String,      //聊天的类型 chat(单聊)    groupChat (群聊)
-    groupId: String,        //群聊 房间id (群聊时房间id)
+    group_id: String,        //群聊 房间id (群聊时房间id)
+    group_name: String,        //群聊 房间id (群聊时房间id)
     ext: String,            //扩展
     bodies: String          //内容 json 文本 存储
                             //类型1-->文本类型  { "type":"txt","msg":"hello from test2"}
                             //类型2-->图片类型  { "type":"img","imgUrl":"hello from test2","imageName","图片名称"  //消息内容}
 });
 
-var save = function (message) {
+var save = function (message,callBack) {
 
     var msg_id = vf_utils.generateUUID();
     var timestamp = new Date().getTime();
@@ -22,10 +23,11 @@ var save = function (message) {
     var msg = new Message({
         msg_id: msg_id,
         timestamp: timestamp,
-        from: message.from,
-        to: message.to,
+        from_user: message.from_user,
+        to_user: message.to_user,
         chat_type: message.chat_type,
-        groupId: message.groupId,
+        group_id: message.group_id,
+        group_name: message.group_name,
         ext: message.ext,
         bodies: bodies,
     });
@@ -33,9 +35,13 @@ var save = function (message) {
     msg.save(function (err) {
         if (err) {
             MyLog("保存聊天记录失败");
+        }else{
+            if(callBack){
+                callBack(msg);
+            }
+            MyLog("保存聊天记录成功");
         }
     });
-    return msg;
 }
 
 module.exports = {

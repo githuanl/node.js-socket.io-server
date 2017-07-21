@@ -90,7 +90,6 @@ var register = function (res, req) {
 
 var mobileLogin = function (res, req, token_Map, callBack) {
     var userName = req.body.userName;
-    console.log('登录人：' + userName);
     if (!userName) {
         res.json({
             code: -1,
@@ -138,10 +137,6 @@ var mobileLogin = function (res, req, token_Map, callBack) {
     });
 }
 
-//根据用户名查询 user
-var findUserWithName = function (res, req) {
-
-}
 
 //根据用户名查询 user
 var findAllUser = function (res, req, onLineUsers) {
@@ -161,7 +156,6 @@ module.exports = {
     User,
     mobileLogin,
     save,
-    findUserWithName,
     register,
     findAllUser,
 };
