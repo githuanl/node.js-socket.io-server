@@ -1,5 +1,4 @@
 var db = require('../config/mongoose.js');
-var vf_utils = require('../utils/utils.js');
 
 var User = db.model('User', {
     userId: Number,
@@ -14,10 +13,10 @@ var User = db.model('User', {
 // 保存
 var save = function (userName, password, headImageUrl, callBack) {
     //生成token
-    var mtoken = vf_utils.generateUUID();
+    var mtoken = vfglobal.util.generateUUID();
 
     //生成token 对应的失效日期
-    var auth_date = vf_utils.dateAdd("m", 2, new Date()).getTime();
+    var auth_date = vfglobal.util.dateAdd("m", 2, new Date()).getTime();
     //实例化，实例化的时候，new User
     var userN = new User({
         name: userName, password: password, headImageUrl: headImageUrl,
@@ -53,10 +52,20 @@ var register = function (res, req) {
         res.json({
             code: -1,
             message: "密码不能为空",
-            data: ""
+            data: ''
         });
         return;
     }
+
+    if(!userName.match('^(?!_)(?!.*?_$)[a-zA-Z0-9_]{4,15}$')){ //用户名不合法时
+        res.json({
+                code: -1,
+                message: "用户名不合法",
+                data: ''
+            });
+        return;
+    }
+
     var headImageUrl = req.body.headImageUrl;
     //查询是否已经注册
     User.find({"name": userName}, function (err, result) {
@@ -67,15 +76,16 @@ var register = function (res, req) {
             save(userName, password,headImageUrl, function (token, date) {
                 mtoken = token;
                 auth_date = date;
+                res.json({
+                    code: 1,
+                    message: "注册成功",
+                    data: {
+                        auth_token: mtoken,
+                        auth_date: auth_date
+                    }
+                });
             });
-            res.json({
-                code: 1,
-                message: "注册成功",
-                data: {
-                    auth_token: mtoken,
-                    auth_date: auth_date
-                }
-            });
+           
         } else {			//如果存在则提示已经存在用户
             res.json({
                 code: -1,
@@ -88,7 +98,7 @@ var register = function (res, req) {
 }
 
 
-var mobileLogin = function (res, req, token_Map, callBack) {
+var mobileLogin = function (res, req) {
     var userName = req.body.userName;
     if (!userName) {
         res.json({
@@ -114,10 +124,15 @@ var mobileLogin = function (res, req, token_Map, callBack) {
         // user.password = 8;
         // user.save();
         if (user) {
-            token_Map[user.auth_token] = userName;
-            if (callBack) {
-                callBack(userName);
-            }
+
+            vfglobal.token_Map[user.auth_token] = userName;
+            vfglobal.allUser.findIndex(function (T, number, arr) {
+                if (T == userName) {
+                    vfglobal.allUser.splice(number, 1);
+                }
+            });
+            vfglobal.allUser.push(userName);
+
             res.json({
                 code: 1,
                 message: "登录成功",
@@ -133,7 +148,6 @@ var mobileLogin = function (res, req, token_Map, callBack) {
                 data: ""
             });
         }
-        // console.log(user);
     });
 }
 

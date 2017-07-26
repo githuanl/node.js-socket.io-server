@@ -1,14 +1,14 @@
 var db = require('../config/mongoose.js');
-var vf_utils = require('../utils/utils.js');
-var MyLog = require('../utils/MyLog.js');
+
 var Message = db.model('Message', {
     msg_id: String,            //消息id uuid
     timestamp: Number,        //发送(服务器)时间
-    from_user: String,            //发送人
-    to_user: String,             //要发送的人
+    sendtime: Number,        //客户端发送时间
+    from_user: String,       //发送人
+    to_user: String,         //要发送的人
     chat_type: String,      //聊天的类型 chat(单聊)    groupChat (群聊)
     group_id: String,        //群聊 房间id (群聊时房间id)
-    group_name: String,        //群聊 房间id (群聊时房间id)
+    group_name: String,      //群聊 房间id (群聊时房间name)
     ext: String,            //扩展
     bodies: String          //内容 json 文本 存储
                             //类型1-->文本类型  { "type":"txt","msg":"hello from test2"}
@@ -16,13 +16,13 @@ var Message = db.model('Message', {
 });
 
 var save = function (message,callBack) {
-
-    var msg_id = vf_utils.generateUUID();
+    var msg_id = vfglobal.util.generateUUID();
     var timestamp = new Date().getTime();
     var bodies = JSON.stringify(message.bodies);
     var msg = new Message({
         msg_id: msg_id,
         timestamp: timestamp,
+        sendtime: message.sendtime,
         from_user: message.from_user,
         to_user: message.to_user,
         chat_type: message.chat_type,
@@ -34,12 +34,11 @@ var save = function (message,callBack) {
     //保存
     msg.save(function (err) {
         if (err) {
-            MyLog("保存聊天记录失败");
+            vfglobal.MyLog("保存聊天记录失败");
         }else{
             if(callBack){
                 callBack(msg);
             }
-            MyLog("保存聊天记录成功");
         }
     });
 }
