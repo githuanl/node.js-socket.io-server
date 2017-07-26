@@ -8,8 +8,8 @@ let tokens = ["431b9699945a0fa11e692f9a281e3be5deec70ea61c8530aef7efbcc098b7e71"
 let service = new apn.Provider({
     token: {
         key: './config/AuthKey.p8', // Path to the key p8 file
-        keyId: 'SXZZL6BZ83', // The Key ID of the p8 file (available at https://developer.apple.com/account/ios/certificate/key)
-        teamId: '5HBP8N48W6', // The Team ID of your Apple Developer Account (available at https://developer.apple.com/account/#/membership/)
+        keyId: '', // The Key ID of the p8 file (available at https://developer.apple.com/account/ios/certificate/key)
+        teamId: '', // The Team ID of your Apple Developer Account (available at https://developer.apple.com/account/#/membership/)
     },
     production: false // Set to true if sending a notification to a production iOS app
 });
