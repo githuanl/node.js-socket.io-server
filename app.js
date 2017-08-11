@@ -1,6 +1,7 @@
 var express = require('express');
 var vfutils = require('./utils/utils.js');
 var MyLog = require('./utils/MyLog.js');
+var redis   = require('redis');
 var app = express();
 
 var bodyParser = require('body-parser');
@@ -45,6 +46,7 @@ global.vfglobal = {
     MyLog:MyLog,
     //io
     io : io,
+    redis:redis,
 }
 
 require('./router/router.js')(app);

@@ -11,6 +11,7 @@
     "express-session": "*",
     "formidable": "*",
     "mongoose": "*",
-    "socket.io": "*"
+    "socket.io": "*",
+    "redis": "*"
   }
 }

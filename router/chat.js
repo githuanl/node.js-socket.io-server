@@ -1,5 +1,41 @@
 var vfMessage = require('../entity/Message.js');
 
+var pub = vfglobal.redis.createClient({ 
+        host: '192.168.0.208',
+        port: 6379 
+    });
+var sub = vfglobal.redis.createClient({ 
+        host: '192.168.0.208',
+        port: 6379 
+    });
+
+sub.on('error', function (err) {
+    vfglobal.MyLog('error event - ' + client.host + ':' + client.port + ' - ' + err);
+});
+
+sub.on('connect', function (err) {
+   vfglobal.MyLog('---------------连接成功------------');
+});
+
+sub.on("subscribe", function(channel, count) {
+    vfglobal.MyLog("Subscribed to " + channel + ". Now subscribed to " + count + " channel(s).");
+});
+
+
+sub.on("message", function(channel, message) {
+     vfglobal.MyLog("这是个通知消息" + channel + ": " + message);
+     vfglobal.io.emit("notification", {'message': message});
+});
+
+sub.subscribe("tungns");
+
+//setInterval 
+setTimeout(function() {
+    var no = Math.floor(Math.random() * 100);
+    pub.publish('tungns', 'Generated Chat random no ' + no);
+}, 5000);
+
+
 //ios 推送消息
 var apn = require('apn');
 // token 数组
@@ -92,6 +128,17 @@ var chat = function (io) {
             socket.broadcast.emit("liaotian", msg);
         });
 
+        // socket.on('pong', function() {
+        //     console.log("pong", new Date().toString());
+        //     var to = setTimeout(function(){
+
+        //         console.log("ping", new Date().toString());
+        //         socket.emit('ping');
+        //         clearTimeout(to)
+
+        //     },20000);
+        //  });
+
         // 单聊
         socket.on('chat', function (message, callback) {
 
@@ -104,7 +151,7 @@ var chat = function (io) {
                 var to_user = msg.to_user;
                 if (vfglobal.socket_Map.hasOwnProperty(to_user)) {    //私聊
                     var voIo = vfglobal.socket_Map[to_user];         //取出对应的io
-                    voIo.volatile.emit('chat', msg, function (data) {   //用其自身连接给自己发消息
+                    voIo.emit('chat', msg, function (data) {   //用其自身连接给自己发消息
                         vfglobal.MyLog(msg.to_user +' -->> '+ data);
                     });
                 } else {
@@ -134,5 +181,9 @@ var chat = function (io) {
             });
         });
     });
+
+    // setInterval(function() {
+    //    io.emit('ping', { beat : 1 });
+    // }, 5000);
 }
 module.exports = chat;
