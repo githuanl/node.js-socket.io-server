@@ -15,7 +15,7 @@ var Message = db.model('Message', {
                             //类型2-->图片类型  { "type":"img","imgUrl":"hello from test2","imageName","图片名称"  //消息内容}
 });
 
-var save = function (message,callBack) {
+var save = function (message, callBack) {
     var msg_id = vfglobal.util.generateUUID();
     var timestamp = new Date().getTime();
     var bodies = JSON.stringify(message.bodies);
@@ -35,8 +35,8 @@ var save = function (message,callBack) {
     msg.save(function (err) {
         if (err) {
             vfglobal.MyLog("保存聊天记录失败");
-        }else{
-            if(callBack){
+        } else {
+            if (callBack) {
                 callBack(msg);
             }
         }

@@ -1,36 +1,36 @@
 var vfMessage = require('../entity/Message.js');
 
-var pub = vfglobal.redis.createClient({ 
-        host: '192.168.0.208',
-        port: 6379 
-    });
-var sub = vfglobal.redis.createClient({ 
-        host: '192.168.0.208',
-        port: 6379 
-    });
+var pub = vfglobal.redis.createClient({
+    host: '192.168.0.208',
+    port: 6379
+});
+var sub = vfglobal.redis.createClient({
+    host: '192.168.0.208',
+    port: 6379
+});
 
 sub.on('error', function (err) {
     vfglobal.MyLog('error event - ' + client.host + ':' + client.port + ' - ' + err);
 });
 
 sub.on('connect', function (err) {
-   vfglobal.MyLog('---------------连接成功------------');
+    vfglobal.MyLog('---------------redis 连接成功------------');
 });
 
-sub.on("subscribe", function(channel, count) {
-    vfglobal.MyLog("Subscribed to " + channel + ". Now subscribed to " + count + " channel(s).");
+sub.on("subscribe", function (channel, count) {
+    vfglobal.MyLog("订阅事件： " + channel + ".  事件个数为： " + count + " 个.");
 });
 
 
-sub.on("message", function(channel, message) {
-     vfglobal.MyLog("这是个通知消息" + channel + ": " + message);
-     vfglobal.io.emit("notification", {'message': message});
+sub.on("message", function (channel, message) {
+    vfglobal.MyLog("这是个通知消息" + channel + ": " + message);
+//     vfglobal.io.emit("notification", {'message': message});
 });
 
 sub.subscribe("tungns");
 
 //setInterval 
-setTimeout(function() {
+setTimeout(function () {
     var no = Math.floor(Math.random() * 100);
     pub.publish('tungns', 'Generated Chat random no ' + no);
 }, 5000);
@@ -38,6 +38,7 @@ setTimeout(function() {
 
 //ios 推送消息
 var apn = require('apn');
+
 // token 数组
 let tokens = ["431b9699945a0fa11e692f9a281e3be5deec70ea61c8530aef7efbcc098b7e71"];
 
@@ -49,7 +50,6 @@ let service = new apn.Provider({
     },
     production: false // Set to true if sending a notification to a production iOS app
 });
-
 
 let note = new apn.Notification();
 // 主题 一般取应用标识符（bundle identifier）
@@ -70,6 +70,7 @@ service.shutdown();
 var chat = function (io) {
 
     var vfUser = require('../entity/User.js');
+    var vfGroup = require('../entity/Group.js');
 
     // 拦截操作 通过 token
     io.set("authorization", function (handshakeData, callback) {
@@ -116,10 +117,15 @@ var chat = function (io) {
 
         var userName = vfglobal.token_Map[token];
 
-        vfglobal.MyLog(userName + ' 上线了 上线时间：' + new Date().toLocaleString());
+
+        vfglobal.MyLog("------------------------->" + userName + ' 上线了 上线时间：' + new Date().toLocaleString());
 
         socket.broadcast.emit('onLine', {'user': userName});
         vfglobal.socket_Map[userName] = socket;  //将用户对应的 socket 存起来
+
+//        if(!vfglobal.allUser[userName]){
+//            vfglobal.allUser.push(userName);
+//        }
 
         // vfglobal.MyLog(socket.handshake.headers);
         // 整个系统 级的聊天
@@ -152,7 +158,7 @@ var chat = function (io) {
                 if (vfglobal.socket_Map.hasOwnProperty(to_user)) {    //私聊
                     var voIo = vfglobal.socket_Map[to_user];         //取出对应的io
                     voIo.emit('chat', msg, function (data) {   //用其自身连接给自己发消息
-                        vfglobal.MyLog(msg.to_user +' -->> '+ data);
+                        vfglobal.MyLog(msg.to_user + ' -->> ' + data);
                     });
                 } else {
                     vfglobal.MyLog(to_user + "---已经下线了");
@@ -168,6 +174,35 @@ var chat = function (io) {
                 }
             });
         });
+
+        //加群
+        socket.on('join', function (data, callback) {
+
+            if (callback) callback(data.roomId);        // 反馈 服务器收到了消息
+
+            vfGroup.save(userName, data.room, function (err) {
+                if (!err) {
+                    socket.join(data.room);
+                    vfglobal.MyLog("加入群： " + socket.room);
+                    io.sockets.in(data.roomId).emit('GroupChat', data);
+                }
+            });
+        });
+
+        //退群
+        socket.on('leave', function (data, callback) {
+            vfglobal.MyLog('离开了群：', data.roomId);
+            socket.leave(data.roomId);
+        });
+
+        //群聊天
+        socket.on('GroupChat', function (data, callback) {
+//              //不包括自己
+//              socket.broadcast.to('group1').emit('event_name', data);
+            //包括自己
+            io.sockets.in(data.roomId).emit('GroupChat', data);
+        });
+
         // 用户下线
         socket.on('disconnect', function () {
             var userName = vfglobal.token_Map[token];
