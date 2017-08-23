@@ -108,6 +108,12 @@ var router = function (app) {
             "yonghuming": req.session.userName
         });
     });
+
+    // 视频聊天
+    app.get("/videoChat", function (req, res) {
+
+        console.log()
+    });
 }
 
 module.exports = router;

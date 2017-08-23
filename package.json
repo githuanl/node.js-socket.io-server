@@ -11,7 +11,8 @@
     "express-session": "*",
     "formidable": "*",
     "mongoose": "*",
+    "redis": "*",
     "socket.io": "*",
-    "redis": "*"
+    "timeout-callback": "^2.0.0"
   }
 }
