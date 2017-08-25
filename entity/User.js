@@ -57,12 +57,12 @@ var register = function (res, req) {
         return;
     }
 
-    if(!userName.match('^(?!_)(?!.*?_$)[a-zA-Z0-9_]{4,15}$')){ //用户名不合法时
+    if (!userName.match('^(?!_)(?!.*?_$)[a-zA-Z0-9_]{4,15}$')) { //用户名不合法时
         res.json({
-                code: -1,
-                message: "用户名不合法",
-                data: ''
-            });
+            code: -1,
+            message: "用户名不合法",
+            data: ''
+        });
         return;
     }
 
@@ -73,7 +73,7 @@ var register = function (res, req) {
         if (!user) {		//如果不存在 则注册
             var mtoken = '';
             var auth_date = '';
-            save(userName, password,headImageUrl, function (token, date) {
+            save(userName, password, headImageUrl, function (token, date) {
                 mtoken = token;
                 auth_date = date;
                 res.json({
@@ -85,7 +85,7 @@ var register = function (res, req) {
                     }
                 });
             });
-           
+
         } else {			//如果存在则提示已经存在用户
             res.json({
                 code: -1,
@@ -155,13 +155,14 @@ var mobileLogin = function (res, req) {
 //根据用户名查询 user
 var findAllUser = function (res, req, onLineUsers) {
     //查询数据
-    User.find({}, ['name','headImageUrl','nickname'], function (err, result) {
+    User.find({}, ['name', 'headImageUrl', 'nickname'], function (err, result) {
         res.json({
             code: 1,
             message: "查询数据成功",
-            data: { "allUser" : result,
-                    "onLineUsers" : onLineUsers
-                }
+            data: {
+                "allUser": result,
+                "onLineUsers": onLineUsers
+            }
         })
     });
 }

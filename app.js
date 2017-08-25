@@ -47,7 +47,7 @@ global.vfglobal = {
     //io
     io : io,
     redis:redis,
-}
+};
 
 require('./router/router.js')(app);
 require('./router/chat.js')(io);

@@ -38,7 +38,7 @@ var router = function (app) {
             try {
                 extname = path.extname(files.image.name);
             } catch (e) {
-                extname = ".jpg";
+
             }
             //path.normalize('./path//upload/data/./file/./123.jpg'); 规范格式文件名
             var oldpath = path.normalize(files.image.path);
@@ -61,6 +61,7 @@ var router = function (app) {
             });
         });
     });
+
 
 
     //手机端 登录  mobile login
