@@ -87,6 +87,7 @@ var chat = function (io) {
 
     var vfUser = require('../entity/User.js');
     var vfGroup = require('../entity/Group.js');
+    var vfGroupUser = require('../entity/GroupUser.js');
 
     // 拦截操作 通过 token
     io.set("authorization", function (handshakeData, callback) {
@@ -99,7 +100,6 @@ var chat = function (io) {
         // vfglobal.MyLog(vfglobal.token_Map);
         if (vfglobal.isLogin > 0 || (token && vfglobal.token_Map.hasOwnProperty(token))) {    //说明存在
             callback(null, true);
-            vfglobal.MyLog('放行连接');
         } else {
             if (!token) {                 //不存在token 拦截
                 callback({data: '不存在token时不能连接'}, false);
@@ -126,19 +126,26 @@ var chat = function (io) {
         // vfglobal.MyLog(handshakeData.client._peername);
     });
 
-
     io.on('connection', function (socket) {
 
         var token = socket.handshake.query.auth_token;
 
         var userName = vfglobal.token_Map[token];
 
-
         vfglobal.MyLog("------------------------->" + userName + ' 上线了 上线时间：' + new Date().toLocaleString());
 
         socket.broadcast.emit('onLine', {'user': userName});
+
         vfglobal.socket_Map[userName] = socket;  //将用户对应的 socket 存起来
 
+        vfGroupUser.findAll(userName, function (data) {  //查询当前人 加入的所有群
+            vfglobal.MyLog(data);
+        });
+
+        //https://stackoverflow.com/questions/27055989/socket-io-1-0-x-get-socket-by-id
+        //For 0.9 its io.sockets.sockets[socketId] and not io.sockets.socket[socketId]  搜索关键词：socket.io socket.id find
+        vfglobal.MyLog(io.sockets.connected[socket.id] === socket);
+        // vfglobal.MyLog(io.sockets.sockets[socket.id] === socket);
 //        if(!vfglobal.allUser[userName]){
 //            vfglobal.allUser.push(userName);
 //        }
@@ -162,33 +169,35 @@ var chat = function (io) {
         //  });
 
 
-
         // 单聊
         socket.on('chat', function (message, callback) {
 
             // 发送的是位置
             var messageBody = message.bodies;
 
-            if (messageBody.type == 'img') {
-                
-                var imageBuffer = message.imageData;
-                fs.writeFile('./public/images/avatar2.jpg', imageBuffer, function(err) {
-                    if(err) {console.log(err)}
-                    else {
-                        console.log('success hhhhhhh');
-                    }
-                });
-            }
-            else if(messageBody.type == 'loc') {
+            // if (messageBody.type == 'img') {
+            //
+            //     var imageBuffer = message.imageData;
+            //     fs.writeFile('./public/images/avatar2.jpg', imageBuffer, function (err) {
+            //         if (err) {
+            //             console.log(err)
+            //         }
+            //         else {
+            //             console.log('success hhhhhhh');
+            //         }
+            //     });
+            // }else
 
-                console.log('位置纬度：'+ messageBody.latitude + "经度" + messageBody.longitude);
+
+            if (messageBody.type == 'loc') {
+
+                console.log('位置纬度：' + messageBody.latitude + "经度" + messageBody.longitude);
                 var url = 'http://restapi.amap.com/v3/staticmap?location=' + messageBody.longitude + ',' + messageBody.latitude + '&zoom=15&size=400*200&markers=mid,,A:' + messageBody.longitude + ',' + messageBody.latitude + '&key=99ad10a03744945e206a837dc61d58fa'
                 console.log(url);
                 request.GetRequest(url, function (err, res) {
                     if (err) { // 高德后台请求区域图片失败
 
-                    }
-                    else { // 高德后台响应
+                    } else { // 高德后台响应
 
                         // 图片数据
                         var imgData = '';
@@ -198,19 +207,18 @@ var chat = function (io) {
                         var isBackImg = contentType.indexOf("image") >= 0;
 
                         res.setEncoding("binary"); //一定要设置response的编码为binary否则会下载下来的图片打不开
-                        res.on("data", function(chunk){
+                        res.on("data", function (chunk) {
 
-                                imgData += chunk;
+                            imgData += chunk;
                         });
 
-                        res.on("end", function(){
+                        res.on("end", function () {
                             if (isBackImg) {    // 返回为图片，保存图片
                                 var uuid = vfglobal.util.generateUUID();
                                 var imageFileName = uuid + '.PNG';
-                                fs.writeFile("./public/images/mapImages/" + imageFileName, imgData, "binary", function(err){
-                                    if(err){
+                                fs.writeFile("./public/images/mapImages/" + imageFileName, imgData, "binary", function (err) {
+                                    if (err) {
                                         console.log("down fail" + err);
-
                                     }
                                     else {
                                         console.log("down success");
@@ -230,23 +238,41 @@ var chat = function (io) {
             }
         });
 
-        //加群
+        //加入群
         socket.on('join', function (data, callback) {
 
             if (callback) callback(data.roomId);        // 反馈 服务器收到了消息
 
-            vfGroup.save(userName, data.room, function (err) {
-                if (!err) {
-                    socket.join(data.room);
-                    vfglobal.MyLog("加入群： " + socket.room);
+            vfGroup.joinGroup(userName, data.roomId, function (res) {
+
+                if (res === "") { //说明群存在
+                    socket.join(data.roomId);
+                    vfglobal.MyLog("加入群： " + data.roomId);
                     io.sockets.in(data.roomId).emit('GroupChat', data);
+                } else {
+                    vfglobal.MyLog("群不存在： " + data.roomId);
                 }
+            });
+        });
+
+        //创建群
+        socket.on('create', function (data, callback) {
+
+            if (callback) callback(data.roomId);        // 反馈 服务器收到了消息
+
+            vfGroup.create(userName, data.roomId, function (callBack) {
+                socket.join(data.roomId);
+                io.sockets.in(data.roomId).emit('GroupChat', data);
+
             });
         });
 
         //退群
         socket.on('leave', function (data, callback) {
-            vfglobal.MyLog('离开了群：', data.roomId);
+
+            vfGroup.leave(userName, data.roomId, function (callBack) {
+                vfglobal.MyLog('离开了群：', data.roomId);
+            });
             socket.leave(data.roomId);
         });
 
@@ -255,6 +281,7 @@ var chat = function (io) {
 //              //不包括自己
 //              socket.broadcast.to('group1').emit('event_name', data);
             //包括自己
+            vfglobal.MyLog('给群 ' + data.roomId + " 发消息");
             io.sockets.in(data.roomId).emit('GroupChat', data);
         });
 
@@ -288,7 +315,7 @@ var chat = function (io) {
                             console.log('消息发送超时，转APNS');
                             sendAPNS(msg);
                         } else {
-                            vfglobal.MyLog(msg.to_user +' -->> '+ data);
+                            vfglobal.MyLog(msg.to_user + ' -->> ' + data);
                         }
 
                     }));
