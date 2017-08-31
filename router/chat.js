@@ -139,12 +139,17 @@ var chat = function (io) {
         vfglobal.socket_Map[userName] = socket;  //将用户对应的 socket 存起来
 
         vfGroupUser.findAll(userName, function (data) {  //查询当前人 加入的所有群
-            vfglobal.MyLog(data);
+
+            data.findIndex(function (T, number, data) {
+                socket.join(T.group_name);
+                vfglobal.MyLog("加入群：", T.group_name + " " + new Date().toLocaleString());
+            });
+
         });
 
         //https://stackoverflow.com/questions/27055989/socket-io-1-0-x-get-socket-by-id
         //For 0.9 its io.sockets.sockets[socketId] and not io.sockets.socket[socketId]  搜索关键词：socket.io socket.id find
-        vfglobal.MyLog(io.sockets.connected[socket.id] === socket);
+        // vfglobal.MyLog(io.sockets.connected[socket.id] === socket);
         // vfglobal.MyLog(io.sockets.sockets[socket.id] === socket);
 //        if(!vfglobal.allUser[userName]){
 //            vfglobal.allUser.push(userName);
