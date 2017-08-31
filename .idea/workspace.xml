@@ -2,15 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d1e5c099-8e9a-4c04-aea9-65e94cb112e8" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/public/images/mapImages/8bb5c859-e0c7-4111-dcc8-8470b56a3f8c.PNG" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/public/images/mapImages/9fcf16c7-4d3b-4859-84f6-16961e983940.PNG" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/public/images/mapImages/ac345596-3a31-496f-f7d5-db7c1ec39c0b.PNG" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/public/images/mapImages/ec13f736-c34d-49c6-9009-71d98cf33576.PNG" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/public/images/mapImages/fad58481-61d8-4cee-b486-3cc1bfe6d7b2.PNG" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/entity/Message.js" afterPath="$PROJECT_DIR$/entity/Message.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/entity/Group.js" afterPath="$PROJECT_DIR$/entity/Group.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/entity/GroupUser.js" afterPath="$PROJECT_DIR$/entity/GroupUser.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/router/chat.js" afterPath="$PROJECT_DIR$/router/chat.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/router/videoChat.js" afterPath="$PROJECT_DIR$/router/videoChat.js" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -24,8 +18,28 @@
       <file leaf-file-name="chat.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/router/chat.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="332">
-              <caret line="164" column="0" lean-forward="true" selection-start-line="164" selection-start-column="0" selection-end-line="164" selection-end-column="0" />
+            <state relative-caret-position="145">
+              <caret line="355" column="24" lean-forward="false" selection-start-line="355" selection-start-column="24" selection-end-line="355" selection-end-column="24" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GroupUser.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/entity/GroupUser.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Group.js" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/entity/Group.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-117">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -61,11 +75,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="request.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="request.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/router/request.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="345">
-              <caret line="23" column="14" lean-forward="false" selection-start-line="23" selection-start-column="14" selection-end-line="23" selection-end-column="14" />
+            <state relative-caret-position="360">
+              <caret line="24" column="2" lean-forward="true" selection-start-line="24" selection-start-column="2" selection-end-line="24" selection-end-column="2" />
               <folding />
             </state>
           </provider>
@@ -136,8 +150,8 @@
         <option value="internal/process/next_tick.js" />
         <option value="$PROJECT_DIR$/entity/Message.js" />
         <option value="$PROJECT_DIR$/router/vedioChat.js" />
-        <option value="$PROJECT_DIR$/router/chat.js" />
         <option value="$PROJECT_DIR$/router/videoChat.js" />
+        <option value="$PROJECT_DIR$/router/chat.js" />
       </list>
     </option>
   </component>
@@ -376,12 +390,12 @@
       <workItem from="1503973498081" duration="12230000" />
       <workItem from="1504011998499" duration="8005000" />
       <workItem from="1504056293784" duration="10022000" />
-      <workItem from="1504147147402" duration="9484000" />
+      <workItem from="1504147147402" duration="9925000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="125651000" />
+    <option name="totallyTimeSpent" value="126092000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -617,13 +631,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/entity/Group.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/entity/Message.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="515">
@@ -639,13 +646,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/router/vedioChat.js" />
-    <entry file="file://$PROJECT_DIR$/entity/GroupUser.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/node_modules/timeout-callback/index.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="330">
@@ -669,14 +669,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/router/chat.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="332">
-          <caret line="164" column="0" lean-forward="true" selection-start-line="164" selection-start-column="0" selection-end-line="164" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/router/videoChat.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="227">
@@ -687,8 +679,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/router/request.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" column="14" lean-forward="false" selection-start-line="23" selection-start-column="14" selection-end-line="23" selection-end-column="14" />
+        <state relative-caret-position="360">
+          <caret line="24" column="2" lean-forward="true" selection-start-line="24" selection-start-column="2" selection-end-line="24" selection-end-column="2" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/router/chat.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="145">
+          <caret line="355" column="24" lean-forward="false" selection-start-line="355" selection-start-column="24" selection-end-line="355" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entity/GroupUser.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/entity/Group.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-117">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
