@@ -37,7 +37,9 @@ var save = function (message, callBack) {
             vfglobal.MyLog("保存聊天记录失败");
         } else {
             if (callBack) {
-                callBack(msg);
+                message.msg_id = msg_id;
+                message.timestamp = timestamp;
+                callBack(message);
             }
         }
     });

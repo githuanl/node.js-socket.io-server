@@ -1,8 +1,10 @@
 var vfMessage = require('../entity/Message.js');
 
 var timeoutCallback = require('timeout-callback');
-var request = require('./request');
+var request =  require('./request.js');
 var fs = require('fs');
+var path = require('path');
+var videoChat = require('./videoChat');
 // var pub = vfglobal.redis.createClient({
 //         host: '192.168.0.208',
 //         port: 6379
@@ -75,7 +77,7 @@ function sendAPNS(msg) {
     note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
     note.badge = 1;
     note.sound = "ping.aiff";
-    note.alert = JSON.parse(msg.bodies).msg;
+    note.alert = msg.bodies.msg;
     note.payload = {'messageFrom': 'John Appleseed'};
     service.send(note, tokens).then(result => {
         vfglobal.MyLog("sent:", result.sent.length);
@@ -166,24 +168,45 @@ var chat = function (io) {
         // 单聊
         socket.on('chat', function (message, callback) {
 
-            // 发送的是位置
+
             var messageBody = message.bodies;
 
+            // 发送图片
             if (messageBody.type == 'img') {
                 
-                var imageBuffer = message.imageData;
-                fs.writeFile('./public/images/avatar2.jpg', imageBuffer, function(err) {
-                    if(err) {console.log(err)}
+                var imageBuffer = messageBody.fileData;
+                var imageName = messageBody.fileName;
+                var imageType = path.extname(imageName);
+                var uuid = vfglobal.util.generateUUID();
+                var newImageName = uuid + imageType;
+                fs.writeFile("./public/images/chatImages/" + newImageName, imageBuffer, function(err) {
+                    if(err) {vfglobal.MyLog(err)}
                     else {
-                        console.log('success hhhhhhh');
+                        message.bodies.fileRemotePath = "images/chatImages/" + newImageName;
+                        message.bodies.fileData = null;
+                        sendMessage(message, callback, imageBuffer);
                     }
                 });
             }
+            else if (messageBody.type == 'audio') {
+                var audioBuffer = messageBody.fileData;
+                var audioName = messageBody.fileName;
+                var audioType = path.extname(audioName);
+                var uuid = vfglobal.util.generateUUID();
+                var newAudioName = uuid + audioType;
+                fs.writeFile("./public/audios/" + newAudioName, audioBuffer, function (err) {
+                    if (err){vfglobal.MyLog(err)}
+                    else {
+                        message.bodies.fileRemotePath = "audios/" + newAudioName;
+                        message.bodies.fileData = null;
+                        sendMessage(message, callback);
+                    }
+                })
+            }
+            // 发送定位
             else if(messageBody.type == 'loc') {
 
-                console.log('位置纬度：'+ messageBody.latitude + "经度" + messageBody.longitude);
                 var url = 'http://restapi.amap.com/v3/staticmap?location=' + messageBody.longitude + ',' + messageBody.latitude + '&zoom=15&size=400*200&markers=mid,,A:' + messageBody.longitude + ',' + messageBody.latitude + '&key=99ad10a03744945e206a837dc61d58fa'
-                console.log(url);
                 request.GetRequest(url, function (err, res) {
                     if (err) { // 高德后台请求区域图片失败
 
@@ -194,7 +217,6 @@ var chat = function (io) {
                         var imgData = '';
                         // 响应的是否为图片
                         var contentType = res.headers['content-type'];
-                        console.log(contentType);
                         var isBackImg = contentType.indexOf("image") >= 0;
 
                         res.setEncoding("binary"); //一定要设置response的编码为binary否则会下载下来的图片打不开
@@ -209,13 +231,13 @@ var chat = function (io) {
                                 var imageFileName = uuid + '.PNG';
                                 fs.writeFile("./public/images/mapImages/" + imageFileName, imgData, "binary", function(err){
                                     if(err){
-                                        console.log("down fail" + err);
+                                        vfglobal.MyLog("down fail" + err);
 
                                     }
                                     else {
-                                        console.log("down success");
+                                        vfglobal.MyLog("down success");
 
-                                        message.bodies.locationImageUrl = "images/mapImages/" + imageFileName;
+                                        message.bodies.fileRemotePath = "images/mapImages/" + imageFileName;
                                         sendMessage(message, callback);
                                     }
 
@@ -228,6 +250,37 @@ var chat = function (io) {
             else {
                 sendMessage(message, callback);
             }
+        });
+
+        /* 创建视频聊天房间 */
+        videoChat.scanVideoChat(socket);
+
+        socket.on('videoChat', function (data, callback) {
+
+
+            // 生成一个房间号
+            var room = vfglobal.util.generateUUID();
+            if (callback) { // 将房间号发送给聊天的双方
+
+                callback(room);
+
+                var targetSocket = vfglobal.socket_Map[data.to_user];
+                if (targetSocket) {
+                    targetSocket.emit('videoChat', {"from_user":data.from_user, "room":room}, timeoutCallback(function (timeout, data) {   //用其自身连接给自己发消息
+
+                        if (timeout) {
+                            vfglobal.MyLog('消息发送超时，转APNS');
+                            // sendAPNS(msg);
+                        } else {
+                            vfglobal.MyLog(msg.to_user +' -->> '+ data);
+                        }
+
+                    }));
+                }
+
+            }
+
+
         });
 
         //加群
@@ -272,7 +325,7 @@ var chat = function (io) {
         });
 
         /*保存数据库，消息应答，消息转发*/
-        function sendMessage(message, callback) {
+        function sendMessage(message, callback, fileData) {
             vfMessage.save(message, function (msg) { //将数据保存到数据库
 
                 if (callback) {     //ack 回调 服务器已收到消息
@@ -281,11 +334,12 @@ var chat = function (io) {
                 // io.emit('chat', msg);              // 所有人收的到
                 var to_user = msg.to_user;
                 if (vfglobal.socket_Map.hasOwnProperty(to_user)) {    //私聊
-                    var voIo = vfglobal.socket_Map[to_user];         //取出对应的io
+                    var voIo = vfglobal.socket_Map[to_user];//取出对应的io
+                    msg.bodies.fileData = fileData;
                     voIo.emit('chat', msg, timeoutCallback(function (timeout, data) {   //用其自身连接给自己发消息
 
                         if (timeout) {
-                            console.log('消息发送超时，转APNS');
+                            vfglobal.MyLog('消息发送超时，转APNS');
                             sendAPNS(msg);
                         } else {
                             vfglobal.MyLog(msg.to_user +' -->> '+ data);
