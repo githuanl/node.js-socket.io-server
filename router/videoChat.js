@@ -95,12 +95,12 @@ var scanVideoChat = function (socket) {
 
 
 
-        var i, m,
+        var i,
             room = socket.room,
             curRoom;
         if(room) {
             curRoom = rooms[room];
-            for (i = curRoom.length; i--;) {
+            for (i = 0; i < curRoom.length; i++) {
                 if (curRoom[i].id === socket.id) {
                     continue;
                 }
@@ -111,6 +111,23 @@ var scanVideoChat = function (socket) {
             }
         }
 
+    });
+    // 拒绝接听
+    socket.on('cancelVideoChat', function (data) {
+
+        var i,
+            room = data.room,
+            curRoom;
+        if (room) {
+            curRoom = rooms[room];
+            for (i = 0; i < curRoom.length; i++) {
+                var targetSocket = curRoom[i];
+                // 给通话发起者发消息，对方拒绝通话
+                targetSocket.emit('cancelVideoChat', {
+
+                });
+            }
+        }
     });
 };
 
