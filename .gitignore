@@ -1,4 +1,4 @@
 node_modules/
-public/images/
-public/audios/
+public/images/*
+public/audios/*
 
