@@ -1,10 +1,10 @@
 var vfMessage = require('../entity/Message.js');
-
 var timeoutCallback = require('timeout-callback');
 var request =  require('./request.js');
 var fs = require('fs');
 var path = require('path');
 var videoChat = require('./videoChat');
+var gm = require('gm').subClass({imageMagick: true}) // https://github.com/aheckmann/gm/issues/455
 // var pub = vfglobal.redis.createClient({
 //         host: '192.168.0.208',
 //         port: 6379
@@ -190,14 +190,63 @@ var chat = function (io) {
                 var imageType = path.extname(imageName);
                 var uuid = vfglobal.util.generateUUID();
                 var newImageName = uuid + imageType;
-                fs.writeFile("./public/images/chatImages/" + newImageName, imageBuffer, function(err) {
-                    if(err) {vfglobal.MyLog(err)}
-                    else {
-                        message.bodies.fileRemotePath = "images/chatImages/" + newImageName;
-                        message.bodies.fileData = null;
-                        sendMessage(message, callback, imageBuffer);
-                    }
-                });
+                var savePath = "./public/images/chatImages/" + newImageName;
+
+                gm(imageBuffer)
+                    .size(function (err, size) {
+
+                        if(!err) {
+                            vfglobal.MyLog('获取图片尺寸成功');
+
+                            var scale = size.width/size.height;
+                            var refer = scale<1?size.height:size.width;
+                            var imageScale;
+                            if (refer > 300) {
+                                imageScale = refer/300;
+                            }
+                            else {
+                                imageScale = 1;
+                            }
+                            var width = size.width/imageScale;
+                            var height = size.height/imageScale;
+
+                            fs.writeFile(savePath, imageBuffer, function(err) {
+                                if(err) {vfglobal.MyLog(err)}
+                                else {
+                                    message.bodies.size = {'width' : size.width, 'height' : size.height};
+                                    message.bodies.fileRemotePath = "images/chatImages/" + newImageName;
+                                    message.bodies.fileData = null;
+                                    if (imageScale == 1) { // 图片小，不需要缩放
+                                        message.bodies.thumbnailRemotePath = message.bodies.fileRemotePath;
+                                        sendMessage(message, callback, imageBuffer);
+                                    }
+                                    else  {
+                                        var index = imageName.indexOf('.');
+                                        var length = imageName.length;
+                                        var type = imageName.substring(index + 1, length);
+                                        gm(imageBuffer)
+                                            .resize(width, height)
+                                            .toBuffer(type, function (err, buffer) {
+
+                                                fs.writeFile("./public/images/chatImages/s_" + newImageName, buffer, function (err) {
+
+                                                    if (!err) {
+                                                        message.bodies.thumbnailRemotePath = "images/chatImages/s_" + newImageName;
+                                                        sendMessage(message, callback, buffer);
+                                                    }
+                                                })
+                                            });
+                                    }
+                                }
+                            });
+
+
+
+
+                        }
+                    });
+
+
             }
             else if (messageBody.type == 'audio') {
                 var audioBuffer = messageBody.fileData;

@@ -10,6 +10,7 @@
     "express": "*",
     "express-session": "*",
     "formidable": "*",
+    "gm": "^1.23.0",
     "mongoose": "*",
     "redis": "*",
     "socket.io": "*",
